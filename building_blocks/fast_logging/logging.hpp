@@ -89,11 +89,11 @@ struct Logger final
 						break;
 				}
 				queue.update_read_index();
-				next = queue.get_next_read_index();
 			}
-			
+			file.flush();
+
 			using namespace std::chrono_literals;
-			std::this_thread::sleep_for(1ms);
+			std::this_thread::sleep_for(10ms);
 		}
 	}
 
@@ -127,7 +127,7 @@ struct Logger final
 	{
 		while(*value)
 		{
-			push_value(LogElement{LogType::CHAR, {.c = *value}});
+			push_value(*value);
 			value++;
 		}
 	}
@@ -204,13 +204,16 @@ struct Logger final
 	{
 		while(*s)
 		{
-			if(*s == 's')
+			if(*s == '%')
 			{
-				++s;
-			}
-			else
-			{
-				FATAL("Missins arguments to log()");
+				if(UNLIKELY(*(s + 1) == '%'))
+				{
+					++s;
+				}
+				else
+				{
+					FATAL("Missing arguments to log()");
+				}
 			}
 			push_value(*s++);
 		}
